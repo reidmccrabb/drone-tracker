@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { DroneData } from '@/types/drone';
+import { DroneData, FlightPurpose } from '@/types/drone';
 import { DroneFilters, UserLocation } from '@/types/filters';
 import { calculateDistance } from '@/lib/utils/geo-utils';
 
@@ -21,6 +21,8 @@ interface DroneActions {
   setAltitudeRange: (range: [number, number]) => void;
   setDistanceRange: (range: [number, number]) => void;
   setSearchQuery: (query: string) => void;
+  setFlightPurposeFilter: (purposes: FlightPurpose[]) => void;
+  setFaaVerifiedOnly: (verified: boolean) => void;
   clearFilters: () => void;
   setUserLocation: (location: UserLocation | null) => void;
   setConnected: (connected: boolean) => void;
@@ -31,6 +33,8 @@ const initialFilters: DroneFilters = {
   altitudeRange: [0, 500],
   distanceRange: [0, 50000],
   searchQuery: '',
+  flightPurposeFilter: [],
+  faaVerifiedOnly: false,
 };
 
 function applyFilters(drones: DroneData[], filters: DroneFilters, userLocation: UserLocation | null): DroneData[] {
@@ -50,11 +54,23 @@ function applyFilters(drones: DroneData[], filters: DroneFilters, userLocation: 
     });
   }
 
+  if (filters.flightPurposeFilter.length > 0) {
+    result = result.filter(d => filters.flightPurposeFilter.includes(d.operator.flightPurpose));
+  }
+
+  if (filters.faaVerifiedOnly) {
+    result = result.filter(d => d.operator.faaVerified);
+  }
+
   if (filters.searchQuery.trim()) {
     const q = filters.searchQuery.toLowerCase();
     result = result.filter(d =>
       d.identification.uasId.toLowerCase().includes(q) ||
       d.operator.operatorId.toLowerCase().includes(q) ||
+      d.operator.pilotName.toLowerCase().includes(q) ||
+      d.operator.organization?.toLowerCase().includes(q) ||
+      d.operator.licenseNumber?.toLowerCase().includes(q) ||
+      d.operator.droneRegistration.toLowerCase().includes(q) ||
       d.selfIdDescription?.toLowerCase().includes(q)
     );
   }
@@ -95,6 +111,18 @@ export const useDroneStore = create<DroneState & DroneActions>()((set, get) => (
   setSearchQuery: (query) => {
     const state = get();
     const filters = { ...state.filters, searchQuery: query };
+    set({ filters, filteredDrones: applyFilters(state.drones, filters, state.userLocation) });
+  },
+
+  setFlightPurposeFilter: (purposes) => {
+    const state = get();
+    const filters = { ...state.filters, flightPurposeFilter: purposes };
+    set({ filters, filteredDrones: applyFilters(state.drones, filters, state.userLocation) });
+  },
+
+  setFaaVerifiedOnly: (verified) => {
+    const state = get();
+    const filters = { ...state.filters, faaVerifiedOnly: verified };
     set({ filters, filteredDrones: applyFilters(state.drones, filters, state.userLocation) });
   },
 

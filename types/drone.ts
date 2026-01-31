@@ -26,6 +26,16 @@ export interface DroneLocation {
   timestamp: number;
 }
 
+export type FlightPurpose =
+  | 'recreational'
+  | 'commercial'
+  | 'emergency'
+  | 'public_safety'
+  | 'research'
+  | 'education'
+  | 'agriculture'
+  | 'infrastructure_inspection';
+
 export interface OperatorInfo {
   operatorId: string;
   operatorLatitude: number | null;
@@ -33,6 +43,15 @@ export interface OperatorInfo {
   areaRadius: number; // meters
   areaCeiling: number | null;
   areaFloor: number | null;
+  pilotName: string;
+  organization: string | null;
+  licenseNumber: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  droneRegistration: string;
+  flightPurpose: FlightPurpose;
+  faaVerified: boolean;
+  lastFaaLookup: number | null;
 }
 
 export interface DroneIdentification {

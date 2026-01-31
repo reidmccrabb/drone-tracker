@@ -1,7 +1,17 @@
 'use client';
 
 import { useDroneStore } from '@/lib/stores/drone-store';
-import { Filter, Search, RotateCcw } from 'lucide-react';
+import { Filter, Search, RotateCcw, Target, ShieldCheck } from 'lucide-react';
+import { FlightPurpose } from '@/types/drone';
+
+const PURPOSE_OPTIONS: { value: FlightPurpose; label: string }[] = [
+  { value: 'commercial', label: 'Commercial' },
+  { value: 'recreational', label: 'Recreational' },
+  { value: 'public_safety', label: 'Public Safety' },
+  { value: 'research', label: 'Research' },
+  { value: 'emergency', label: 'Emergency' },
+  { value: 'agriculture', label: 'Agriculture' },
+];
 
 export function FilterPanel() {
   const filters = useDroneStore((s) => s.filters);
@@ -11,6 +21,8 @@ export function FilterPanel() {
   const setAltitudeRange = useDroneStore((s) => s.setAltitudeRange);
   const setDistanceRange = useDroneStore((s) => s.setDistanceRange);
   const setSearchQuery = useDroneStore((s) => s.setSearchQuery);
+  const setFlightPurposeFilter = useDroneStore((s) => s.setFlightPurposeFilter);
+  const setFaaVerifiedOnly = useDroneStore((s) => s.setFaaVerifiedOnly);
   const clearFilters = useDroneStore((s) => s.clearFilters);
 
   return (
@@ -30,7 +42,7 @@ export function FilterPanel() {
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
           <input
             type="text"
-            placeholder="Drone ID or Operator..."
+            placeholder="Name, ID, org..."
             value={filters.searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-8 pr-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50"
@@ -93,6 +105,46 @@ export function FilterPanel() {
       ) : (
         <p className="text-xs text-gray-600 italic mb-4">Enable location to filter by distance</p>
       )}
+
+      {/* Flight Purpose */}
+      <div className="mb-4">
+        <label className="text-gray-300 text-xs font-medium flex items-center gap-1.5 mb-2">
+          <Target className="h-3.5 w-3.5" />
+          Flight Purpose
+        </label>
+        <div className="space-y-1.5">
+          {PURPOSE_OPTIONS.map(({ value, label }) => (
+            <label key={value} className="flex items-center gap-2 text-xs cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filters.flightPurposeFilter.includes(value)}
+                onChange={(e) => {
+                  const updated = e.target.checked
+                    ? [...filters.flightPurposeFilter, value]
+                    : filters.flightPurposeFilter.filter(p => p !== value);
+                  setFlightPurposeFilter(updated);
+                }}
+                className="accent-cyan-500"
+              />
+              <span className="text-gray-300">{label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* FAA Verified */}
+      <div className="mb-4">
+        <label className="flex items-center gap-2 text-xs cursor-pointer">
+          <input
+            type="checkbox"
+            checked={filters.faaVerifiedOnly}
+            onChange={(e) => setFaaVerifiedOnly(e.target.checked)}
+            className="accent-cyan-500"
+          />
+          <ShieldCheck className="h-3.5 w-3.5 text-green-400" />
+          <span className="text-gray-300">FAA Verified Only</span>
+        </label>
+      </div>
 
       {/* Clear */}
       <button

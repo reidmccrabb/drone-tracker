@@ -1,8 +1,19 @@
-import { DroneData, DroneStatus, UAType } from '@/types/drone';
+import { DroneData, DroneStatus, UAType, FlightPurpose } from '@/types/drone';
 import { DroneDataService } from './drone-data-service';
 import { calculateDestination, addNoise } from '@/lib/utils/geo-utils';
 
 type MovementPattern = 'circular' | 'linear' | 'hover' | 'search';
+
+interface OperatorProfile {
+  pilotName: string;
+  organization: string | null;
+  licenseNumber: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  droneRegistration: string;
+  flightPurpose: FlightPurpose;
+  faaVerified: boolean;
+}
 
 interface MockDroneConfig {
   id: string;
@@ -18,6 +29,7 @@ interface MockDroneConfig {
   operatorLat: number;
   operatorLng: number;
   description: string;
+  operator: OperatorProfile;
 }
 
 // Austin, Texas area drones
@@ -28,6 +40,16 @@ const CONFIGS: MockDroneConfig[] = [
     pattern: 'circular', patternRadius: 400,
     operatorLat: 30.2660, operatorLng: -97.7420,
     description: 'Survey - Downtown Austin',
+    operator: {
+      pilotName: 'Sarah Martinez',
+      organization: 'Austin Aerial Surveys LLC',
+      licenseNumber: '4217895',
+      contactPhone: '+1-512-555-0123',
+      contactEmail: 'sarah.m@austinaerial.com',
+      droneRegistration: 'FA38KL9Q2R',
+      flightPurpose: 'commercial',
+      faaVerified: true,
+    },
   },
   {
     id: 'drone-002', uasId: 'DJI-ATX002', uaType: 'helicopter_or_multirotor',
@@ -35,6 +57,16 @@ const CONFIGS: MockDroneConfig[] = [
     pattern: 'circular', patternRadius: 300,
     operatorLat: 30.2840, operatorLng: -97.7350,
     description: 'Inspection - UT Campus',
+    operator: {
+      pilotName: 'Dr. James Chen',
+      organization: 'University of Texas - Civil Engineering',
+      licenseNumber: '4891023',
+      contactPhone: '+1-512-555-0198',
+      contactEmail: 'j.chen@utexas.edu',
+      droneRegistration: 'FA72NM5P1K',
+      flightPurpose: 'research',
+      faaVerified: true,
+    },
   },
   {
     id: 'drone-003', uasId: 'SKYDIO-003', uaType: 'helicopter_or_multirotor',
@@ -42,6 +74,16 @@ const CONFIGS: MockDroneConfig[] = [
     pattern: 'hover',
     operatorLat: 30.2620, operatorLng: -97.7500,
     description: 'Photography - Zilker Park',
+    operator: {
+      pilotName: 'Michael Thompson',
+      organization: null,
+      licenseNumber: null,
+      contactPhone: '+1-512-555-0234',
+      contactEmail: 'mthompson.photo@gmail.com',
+      droneRegistration: 'FA91XJ3T7W',
+      flightPurpose: 'recreational',
+      faaVerified: true,
+    },
   },
   {
     id: 'drone-004', uasId: 'AUTEL-004', uaType: 'helicopter_or_multirotor',
@@ -49,6 +91,16 @@ const CONFIGS: MockDroneConfig[] = [
     pattern: 'linear', direction: 45,
     operatorLat: 30.2580, operatorLng: -97.7450,
     description: 'Delivery - Lady Bird Lake',
+    operator: {
+      pilotName: 'Jennifer Lee',
+      organization: 'QuickDeliver Drone Services',
+      licenseNumber: '5023456',
+      contactPhone: '+1-512-555-0456',
+      contactEmail: 'j.lee@quickdeliver.com',
+      droneRegistration: 'FA65RT8K4M',
+      flightPurpose: 'commercial',
+      faaVerified: true,
+    },
   },
   {
     id: 'drone-005', uasId: 'DJI-ATX005', uaType: 'helicopter_or_multirotor',
@@ -56,6 +108,16 @@ const CONFIGS: MockDroneConfig[] = [
     pattern: 'search', patternRadius: 500,
     operatorLat: 30.2490, operatorLng: -97.7490,
     description: 'Search pattern - South Austin',
+    operator: {
+      pilotName: 'Officer Robert Garcia',
+      organization: 'Austin Police Department - Air Support',
+      licenseNumber: '4756129',
+      contactPhone: '+1-512-555-9111',
+      contactEmail: 'r.garcia@austinpd.gov',
+      droneRegistration: 'FA44WP2Y9V',
+      flightPurpose: 'public_safety',
+      faaVerified: true,
+    },
   },
   {
     id: 'drone-006', uasId: 'PARROT-006', uaType: 'helicopter_or_multirotor',
@@ -63,6 +125,16 @@ const CONFIGS: MockDroneConfig[] = [
     pattern: 'hover',
     operatorLat: 30.2745, operatorLng: -97.7395,
     description: 'Monitoring - Capitol area',
+    operator: {
+      pilotName: 'David Kim',
+      organization: 'Texas State Capitol Security',
+      licenseNumber: '4982341',
+      contactPhone: '+1-512-555-7800',
+      contactEmail: 'd.kim@capitol.texas.gov',
+      droneRegistration: 'FA29BV6H3Q',
+      flightPurpose: 'public_safety',
+      faaVerified: true,
+    },
   },
   {
     id: 'drone-007', uasId: 'WING-007', uaType: 'aeroplane',
@@ -70,6 +142,16 @@ const CONFIGS: MockDroneConfig[] = [
     pattern: 'linear', direction: 180,
     operatorLat: 30.2310, operatorLng: -97.7590,
     description: 'Fixed-wing survey - South',
+    operator: {
+      pilotName: 'Carlos Rodriguez',
+      organization: 'SkyMap Technologies',
+      licenseNumber: '4634789',
+      contactPhone: '+1-512-555-0891',
+      contactEmail: 'c.rodriguez@skymap.tech',
+      droneRegistration: 'FA17KL4N8P',
+      flightPurpose: 'commercial',
+      faaVerified: true,
+    },
   },
   {
     id: 'drone-008', uasId: 'DJI-ATX008', uaType: 'helicopter_or_multirotor',
@@ -77,6 +159,16 @@ const CONFIGS: MockDroneConfig[] = [
     pattern: 'circular', patternRadius: 350,
     operatorLat: 30.2940, operatorLng: -97.7210,
     description: 'Mapping - East Austin',
+    operator: {
+      pilotName: 'Emily Watson',
+      organization: 'Urban Mapping Solutions',
+      licenseNumber: '5134567',
+      contactPhone: '+1-512-555-0333',
+      contactEmail: 'e.watson@urbanmapping.com',
+      droneRegistration: 'FA82PQ7M5L',
+      flightPurpose: 'commercial',
+      faaVerified: true,
+    },
   },
 ];
 
@@ -136,6 +228,8 @@ export class MockDroneService implements DroneDataService {
           operatorLongitude: c.operatorLng,
           areaRadius: 1000,
           areaCeiling: 400, areaFloor: 0,
+          ...c.operator,
+          lastFaaLookup: now,
         },
         selfIdDescription: c.description,
         flightPath: [{ latitude: c.lat, longitude: c.lng, altitude: c.altitude, timestamp: now, speed: c.speed }],
